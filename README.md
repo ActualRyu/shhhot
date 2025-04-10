@@ -43,6 +43,10 @@ Shhhot is a privacy-focused Android application that lets you censor text in ima
 3. Connect your device or start an emulator
 4. Click 'Run' to build and install the app
 
+## Download
+
+[![Download APK](https://img.shields.io/badge/Download-APK-blue.svg)](https://github.com/ActualRyu/shhhot/releases/latest/download/release.apk)
+
 ## How to Use
 
 1. **Launch the app** and grant necessary permissions when prompted
