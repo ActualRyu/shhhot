@@ -90,7 +90,8 @@ fun ShhhotTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
+            // Set transparent status bar and let content draw under it
+            WindowCompat.setDecorFitsSystemWindows(window, false)
             // Make status bar icons dark in light mode, light in dark mode
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }

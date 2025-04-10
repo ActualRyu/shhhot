@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +43,9 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
     val uriHandler = LocalUriHandler.current
     
     Scaffold(
+        // Remove default content padding as we're handling it with edge-to-edge UI
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+        // Configure TopAppBar with proper insets
         topBar = {
             TopAppBar(
                 title = { 
@@ -130,7 +135,7 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                 val sourceCodeText = stringResource(R.string.source_code)
                 
                 // Subtle divider for separation
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier
                         .fillMaxWidth(0.3f)
                         .alpha(0.5f),
