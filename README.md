@@ -6,7 +6,7 @@
 
 Shhhot is a privacy-focused Android application that lets you censor text in images using multiple methods. Perfect for quickly redacting sensitive information before sharing screenshots, documents, or photos.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Features
 
@@ -102,7 +102,7 @@ Contributions are welcome! If you'd like to improve Shhhot:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU GPL v3 License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
