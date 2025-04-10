@@ -53,7 +53,7 @@ fun HomeScreen(
                     fontWeight = FontWeight.Medium
                 ),
                 modifier = Modifier
-                    .padding(top = 40.dp)
+                    .padding(top = 60.dp) // Increased from 40dp to 60dp to move it down
                     .align(Alignment.TopCenter)
                     .alpha(0.8f) // Subtle transparency for elegance
             )

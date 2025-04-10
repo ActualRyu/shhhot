@@ -28,7 +28,7 @@ object ImageUtils {
     fun createCensoredBitmap(
         original: Bitmap,
         detectedLines: List<DetectedTextLine>,
-        censorMode: CensorMode
+        defaultCensorMode: CensorMode // This is just the default, we'll use per-word mode
     ): Bitmap {
         // Create a mutable copy of the bitmap
         val result = original.copy(Bitmap.Config.ARGB_8888, true)
@@ -38,17 +38,18 @@ object ImageUtils {
         for (line in detectedLines) {
             // Process each word in the line
             for (word in line.words) {
-                    // Only censor if marked as censored
-                    if (word.isCensored) {
-                        // Expand bounding box by 3 pixels on all sides to prevent text seeping through
-                        val expandedBox = Rect(
-                            word.boundingBox.left - 3,
-                            word.boundingBox.top - 3,
-                            word.boundingBox.right + 3,
-                            word.boundingBox.bottom + 3
-                        )
-                        
-                        when (censorMode) {
+                // Only censor if marked as censored
+                if (word.isCensored) {
+                    // Expand bounding box by 3 pixels on all sides to prevent text seeping through
+                    val expandedBox = Rect(
+                        word.boundingBox.left - 3,
+                        word.boundingBox.top - 3,
+                        word.boundingBox.right + 3,
+                        word.boundingBox.bottom + 3
+                    )
+                    
+                    // Use the word's own censoring mode
+                    when (word.censorMode) {
                         CensorMode.BLOCK -> {
                             // Use fixed colors based on text - black for now
                             // This ensures consistency across all blocks

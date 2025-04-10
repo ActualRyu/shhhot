@@ -25,7 +25,8 @@ enum class CensorMode {
 data class DetectedWord(
     val text: String,
     val boundingBox: Rect,
-    var isCensored: Boolean = false
+    var isCensored: Boolean = false,
+    var censorMode: CensorMode = CensorMode.BLOCK
 )
 
 // Represents a detected text line
@@ -128,7 +129,14 @@ class EditorViewModel : ViewModel() {
         val words = line.words.toMutableList()
         val word = words[wordIndex]
         
-        words[wordIndex] = word.copy(isCensored = !word.isCensored)
+        // If word is not censored, apply the current mode when censoring
+        val newIsCensored = !word.isCensored
+        val newCensorMode = if (newIsCensored) currentCensorMode else word.censorMode
+        
+        words[wordIndex] = word.copy(
+            isCensored = newIsCensored,
+            censorMode = newCensorMode
+        )
         updatedLines[lineIndex] = line.copy(words = words)
         
         detectedTextLines = updatedLines
