@@ -10,7 +10,7 @@
     <string name="source_code">Source Code</string>
     <string name="source_code_url">https://github.com/ActualRyu/shhhot</string>
     <string name="credits">Made with ❤️ by Ryu.</string>
-    <string name="credits_url">https://github.com/ActualRyu/shhhot</string>
+    <string name="credits_url">https://ryucodes.fyi/</string>
     
     <!-- Editor screen -->
     <string name="mode_block">Block</string>
