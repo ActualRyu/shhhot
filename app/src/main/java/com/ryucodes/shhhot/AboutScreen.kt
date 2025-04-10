@@ -133,6 +133,8 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                 val licenseText = stringResource(R.string.license)
                 val sourceCodeUrl = stringResource(R.string.source_code_url)
                 val sourceCodeText = stringResource(R.string.source_code)
+                val creditsUrl = stringResource(R.string.credits_url)
+                val creditsText = stringResource(R.string.credits)
                 
                 // Subtle divider for separation
                 HorizontalDivider(
@@ -164,6 +166,19 @@ fun AboutScreen(onNavigateBack: () -> Unit) {
                 ) {
                     Text(
                         text = sourceCodeText,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                // Credits link
+                TextButton(
+                    onClick = { uriHandler.openUri(creditsUrl) }
+                ) {
+                    Text(
+                        text = creditsText,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Medium
                         ),
