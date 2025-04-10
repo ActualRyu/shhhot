@@ -23,8 +23,8 @@ Shhhot is a privacy-focused Android application that lets you censor text in ima
 
 <div align="center">
   <div style="display:flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-    <img src="screenshots/home.jpg" width="200" alt="Home Screen">
-    <img src="screenshots/editor.jpg" width="200" alt="Editor Screen">
+    <img src="screenshots/home.png" width="200" alt="Home Screen">
+    <img src="screenshots/editor.png" width="200" alt="Editor Screen">
     <img src="screenshots/result.jpg" width="200" alt="Censored Image">
   </div>
 </div>
