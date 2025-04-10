@@ -16,15 +16,40 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Specify the ABIs you want to support
+        ndk {
+            abiFilters.add("armeabi-v7a")
+            abiFilters.add("arm64-v8a")
+        }
+    }
+    
+    // Bundle configuration for Play Store delivery
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        
+        debug {
+            isMinifyEnabled = false
+            applicationIdSuffix = ".debug"
         }
     }
     compileOptions {
@@ -39,6 +64,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = false
     }
 }
 
@@ -53,15 +79,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     
-    // ML Kit for text recognition
+    // ML Kit text recognition
     implementation("com.google.mlkit:text-recognition:16.0.0")
     
-    // Image handling
+    // Image loading - only the essential components
     implementation("io.coil-kt:coil-compose:2.5.0")
-    
-    // For image cropping, zooming and transformations
-    implementation("com.github.skydoves:landscapist-coil:2.2.13")
-    implementation("com.github.skydoves:landscapist-transformation:2.2.13")
     
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
