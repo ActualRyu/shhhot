@@ -1,11 +1,13 @@
 package com.ryucodes.shhhot
 
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.activity.addCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,30 +27,62 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import com.ryucodes.shhhot.ui.theme.ShhhotTheme
+import kotlinx.coroutines.launch
+
+// App screens enum
+enum class AppScreen {
+    HOME,
+    ABOUT,
+    EDITOR
+}
 
 class MainActivity : ComponentActivity() {
-    private var showAbout by mutableStateOf(false)
+    // Current screen state
+    private var currentScreen by mutableStateOf(AppScreen.HOME)
+    
+    // View model for the editor
+    private val editorViewModel by lazy { EditorViewModel() }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
+        // Set up image picker launcher
+        val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let {
+                // Set the selected image in the view model
+                editorViewModel.setSelectedImage(it)
+                
+                // Load the bitmap for processing
+                val bitmap = MediaStore.Images.Media.getBitmap(contentResolver, it)
+                editorViewModel.processImage(bitmap)
+                
+                // Navigate to editor
+                currentScreen = AppScreen.EDITOR
+            }
+        }
+        
         // Handle back button press
         onBackPressedDispatcher.addCallback(this) {
-            if (showAbout) {
-                showAbout = false // Go back to home screen instead of exiting
-            } else {
-                // If already on home screen, allow normal back behavior (exit app)
-                isEnabled = false
-                onBackPressedDispatcher.onBackPressed()
+            when (currentScreen) {
+                AppScreen.ABOUT, AppScreen.EDITOR -> {
+                    currentScreen = AppScreen.HOME // Go back to home screen
+                }
+                AppScreen.HOME -> {
+                    // If already on home screen, allow normal back behavior (exit app)
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
             }
         }
         
         setContent {
             ShhhotApp(
-                showAbout = showAbout,
-                onNavigateToAbout = { showAbout = true },
-                onNavigateBack = { showAbout = false }
+                currentScreen = currentScreen,
+                onNavigateToAbout = { currentScreen = AppScreen.ABOUT },
+                onNavigateToHome = { currentScreen = AppScreen.HOME },
+                onPickImage = { imagePickerLauncher.launch("image/*") },
+                editorViewModel = editorViewModel
             )
         }
     }
@@ -56,34 +90,50 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ShhhotApp(
-    showAbout: Boolean,
+    currentScreen: AppScreen,
     onNavigateToAbout: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateToHome: () -> Unit,
+    onPickImage: () -> Unit,
+    editorViewModel: EditorViewModel
 ) {
     ShhhotTheme {
-        // Wrap both screens in a Box with the theme background color to prevent flashing
-        // Apply safe drawing padding to handle edge-to-edge properly
+        // Wrap all screens in a Box with the theme background color to prevent flashing
         Box(modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(WindowInsets.safeDrawing.asPaddingValues())
         ) {
-            // HomeScreen with fade animation
+            // Home screen
             AnimatedVisibility(
-                visible = !showAbout,
+                visible = currentScreen == AppScreen.HOME,
                 enter = fadeIn(animationSpec = tween(300)),
                 exit = fadeOut(animationSpec = tween(300))
             ) {
-                HomeScreen(onNavigateToAbout = onNavigateToAbout)
+                HomeScreen(
+                    onNavigateToAbout = onNavigateToAbout,
+                    onPickImage = onPickImage
+                )
             }
             
-            // AboutScreen with fade animation
+            // About screen
             AnimatedVisibility(
-                visible = showAbout,
+                visible = currentScreen == AppScreen.ABOUT,
                 enter = fadeIn(animationSpec = tween(300)),
                 exit = fadeOut(animationSpec = tween(300))
             ) {
-                AboutScreen(onNavigateBack = onNavigateBack)
+                AboutScreen(onNavigateBack = onNavigateToHome)
+            }
+            
+            // Editor screen
+            AnimatedVisibility(
+                visible = currentScreen == AppScreen.EDITOR,
+                enter = fadeIn(animationSpec = tween(300)),
+                exit = fadeOut(animationSpec = tween(300))
+            ) {
+                EditorScreen(
+                    viewModel = editorViewModel,
+                    onNavigateBack = onNavigateToHome,
+                    onExportComplete = onNavigateToHome
+                )
             }
         }
     }
@@ -93,7 +143,7 @@ fun ShhhotApp(
 @Composable
 fun HomeScreenPreview() {
     ShhhotTheme {
-        HomeScreen(onNavigateToAbout = {})
+        HomeScreen(onNavigateToAbout = {}, onPickImage = {})
     }
 }
 

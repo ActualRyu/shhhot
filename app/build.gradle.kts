@@ -33,6 +33,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf(
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
+        )
     }
     buildFeatures {
         compose = true
@@ -49,6 +52,20 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    
+    // ML Kit for text recognition
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    
+    // Image handling
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    
+    // For image cropping, zooming and transformations
+    implementation("com.github.skydoves:landscapist-coil:2.2.13")
+    implementation("com.github.skydoves:landscapist-transformation:2.2.13")
+    
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

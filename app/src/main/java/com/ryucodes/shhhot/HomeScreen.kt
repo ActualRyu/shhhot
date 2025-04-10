@@ -33,7 +33,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun HomeScreen(onNavigateToAbout: () -> Unit) {
+fun HomeScreen(
+    onNavigateToAbout: () -> Unit,
+    onPickImage: () -> Unit
+) {
     Scaffold(
         // Remove default content padding as we're handling it with edge-to-edge UI
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0)
@@ -62,7 +65,7 @@ fun HomeScreen(onNavigateToAbout: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 OutlinedButton(
-                    onClick = { /* TODO: Implement functionality */ },
+                    onClick = onPickImage,
                     border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)),
                     shape = RoundedCornerShape(12.dp), // Slightly rounded corners, Apple-style
                     colors = ButtonDefaults.outlinedButtonColors(
