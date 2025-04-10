@@ -1,7 +1,7 @@
 # Shhhot
 
 <div align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="100" alt="App Icon">
+  <img src="app/src/main/res/mipmap-xxxhdpi/app_icon.png" width="100" alt="App Icon">
 </div>
 
 Shhhot is a privacy-focused Android application that lets you censor text in images using multiple methods. Perfect for quickly redacting sensitive information before sharing screenshots, documents, or photos.
@@ -23,9 +23,9 @@ Shhhot is a privacy-focused Android application that lets you censor text in ima
 
 <div align="center">
   <div style="display:flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-    <img src="screenshots/home_screen.jpg" width="200" alt="Home Screen">
-    <img src="screenshots/editor_screen.jpg" width="200" alt="Editor Screen">
-    <img src="screenshots/censored_image.jpg" width="200" alt="Censored Image">
+    <img src="screenshots/home.jpg" width="200" alt="Home Screen">
+    <img src="screenshots/editor.jpg" width="200" alt="Editor Screen">
+    <img src="screenshots/result.jpg" width="200" alt="Censored Image">
   </div>
 </div>
 
