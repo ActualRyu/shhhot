@@ -2,9 +2,11 @@ package com.ryucodes.shhhot
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +47,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -179,22 +183,106 @@ fun EditorScreen(
                                     }
                                     .transformable(state = transformableState)
                             ) {
-                                // Display the image
+                                // Display the image with the text detections
                                 AsyncImage(
-                                    model = bitmap,
-                                    contentDescription = "Selected Image",
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier.fillMaxSize()
+                                model = viewModel.processedBitmap,
+                                contentDescription = "Selected Image",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxSize()
                                 )
                                 
-                                // Overlay for detected text - properly positioned within the same
-                                // transformable container to ensure it scales and moves with the image
-                                DetectedTextOverlay(
-                                    detectedLines = viewModel.detectedTextLines,
-                                    onWordClick = { lineIndex, wordIndex ->
-                                        viewModel.toggleWordCensoring(lineIndex, wordIndex)
+                                // Let's use custom drawing instead
+                                // Get colors outside the Canvas lambda since it's not a Composable context
+                                val errorColor = MaterialTheme.colorScheme.error
+                                val primaryColor = MaterialTheme.colorScheme.primary
+                                
+                                Canvas(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .pointerInput(viewModel.detectedTextLines) {
+                                            detectTapGestures { tapOffset ->
+                                                // Calculate scaling factors again
+                                                val canvasBitmap = viewModel.processedBitmap ?: return@detectTapGestures
+                                                val canvasSizeX = size.width 
+                                                val canvasSizeY = size.height
+                                                
+                                                val canvasScaleX = canvasSizeX / canvasBitmap.width.toFloat()
+                                                val canvasScaleY = canvasSizeY / canvasBitmap.height.toFloat()
+                                                val canvasScaleFactor = minOf(canvasScaleX, canvasScaleY)
+                                                
+                                                val canvasOffsetX = (canvasSizeX - canvasBitmap.width * canvasScaleFactor) / 2f
+                                                val canvasOffsetY = (canvasSizeY - canvasBitmap.height * canvasScaleFactor) / 2f
+                                                
+                                                // Check if tap is inside any word box
+                                                viewModel.detectedTextLines.forEachIndexed { lineIndex, line ->
+                                                    line.words.forEachIndexed { wordIndex, word ->
+                                                        // Convert bounding box to canvas coordinates
+                                                        val boxLeft = word.boundingBox.left * canvasScaleFactor + canvasOffsetX
+                                                        val boxTop = word.boundingBox.top * canvasScaleFactor + canvasOffsetY
+                                                        val boxRight = word.boundingBox.right * canvasScaleFactor + canvasOffsetX
+                                                        val boxBottom = word.boundingBox.bottom * canvasScaleFactor + canvasOffsetY
+                                                        
+                                                        // Check if tap is inside this word's box
+                                                        if (tapOffset.x in boxLeft..boxRight && 
+                                                           tapOffset.y in boxTop..boxBottom) {
+                                                            // Toggle censoring for this word
+                                                            viewModel.toggleWordCensoring(lineIndex, wordIndex)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                ) {
+                                    // Calculate scaling factors
+                                val bitmap = viewModel.processedBitmap ?: return@Canvas
+                                
+                                // Calculate the scaling factor based on the canvas size and bitmap size
+                                val scaleX = size.width / bitmap.width.toFloat()
+                                    val scaleY = size.height / bitmap.height.toFloat()
+                                val scaleFactor = minOf(scaleX, scaleY)
+                                
+                                // Calculate starting point to center the image
+                                val offsetX = (size.width - bitmap.width * scaleFactor) / 2f
+                                val offsetY = (size.height - bitmap.height * scaleFactor) / 2f
+                                
+                                // Draw clickable areas for each word
+                                for ((lineIndex, line) in viewModel.detectedTextLines.withIndex()) {
+                                    for ((wordIndex, word) in line.words.withIndex()) {
+                                        // Convert bounding box to canvas coordinates
+                                        val left = word.boundingBox.left * scaleFactor + offsetX
+                                        val top = word.boundingBox.top * scaleFactor + offsetY
+                                        val right = word.boundingBox.right * scaleFactor + offsetX
+                                        val bottom = word.boundingBox.bottom * scaleFactor + offsetY
+                                        
+                                        // Draw rectangle for this word
+                                        drawRect(
+                                            color = if (word.isCensored) 
+                                                errorColor.copy(alpha = 0.3f)
+                                            else 
+                                                primaryColor.copy(alpha = 0.1f),
+                                            topLeft = Offset(left, top),
+                                            size = androidx.compose.ui.geometry.Size(
+                                                width = right - left,
+                                                height = bottom - top
+                                            )
+                                        )
+                                        
+                                        // Draw border
+                                        drawRect(
+                                            color = if (word.isCensored) 
+                                                errorColor
+                                            else 
+                                                primaryColor.copy(alpha = 0.5f),
+                                            topLeft = Offset(left, top),
+                                            size = androidx.compose.ui.geometry.Size(
+                                                width = right - left,
+                                                height = bottom - top
+                                            ),
+                                            style = Stroke(width = 1f)
+                                        )
                                     }
-                                )
+                                }
+                            }
                             }
                         }
                     }
@@ -210,52 +298,7 @@ fun EditorScreen(
     }
 }
 
-@Composable
-fun DetectedTextOverlay(
-    detectedLines: List<DetectedTextLine>,
-    onWordClick: (Int, Int) -> Unit
-) {
-    // For each line of text
-    detectedLines.forEachIndexed { lineIndex, line ->
-        // For each word in the line
-        line.words.forEachIndexed { wordIndex, word ->
-            // Get bounding box in pixels
-            val boundingBox = word.boundingBox
-            
-            // Create a clickable overlay sized to match the word
-            // Using absolute positioning with graphicsLayer
-            Box(
-                modifier = Modifier
-                    .graphicsLayer {
-                        translationX = boundingBox.left.toFloat()
-                        translationY = boundingBox.top.toFloat()
-                    }
-                    .size(
-                        width = boundingBox.width().toFloat().dp,
-                        height = boundingBox.height().toFloat().dp
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = if (word.isCensored) 
-                            MaterialTheme.colorScheme.error 
-                        else 
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(2.dp)
-                    )
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(
-                        if (word.isCensored)
-                            MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
-                        else
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    )
-                    .clickable {
-                        onWordClick(lineIndex, wordIndex)
-                    }
-            )
-        }
-    }
-}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -282,7 +325,7 @@ fun CensorModeSelector(
         ) {
             // Block mode
             SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                 onClick = { onModeSelected(CensorMode.BLOCK) },
                 selected = selectedMode == CensorMode.BLOCK
             ) {
@@ -291,20 +334,11 @@ fun CensorModeSelector(
             
             // Hide mode
             SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                 onClick = { onModeSelected(CensorMode.HIDE) },
                 selected = selectedMode == CensorMode.HIDE
             ) {
                 Text("Hide")
-            }
-            
-            // Blur mode
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
-                onClick = { onModeSelected(CensorMode.BLUR) },
-                selected = selectedMode == CensorMode.BLUR
-            ) {
-                Text("Blur")
             }
         }
         

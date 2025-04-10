@@ -40,45 +40,28 @@ object ImageUtils {
             for (word in line.words) {
                 // Only censor if marked as censored
                 if (word.isCensored) {
-                    // Expand the bounding box slightly for better coverage
-                    val expandedBox = Rect(
-                        word.boundingBox.left - 2,
-                        word.boundingBox.top - 2,
-                        word.boundingBox.right + 2,
-                        word.boundingBox.bottom + 2
-                    )
+                    val boundingBox = word.boundingBox
                     
                     when (censorMode) {
                         CensorMode.BLOCK -> {
-                            // Get most common text color by sampling multiple points
-                            val textColor = getDominantTextColor(original, word.boundingBox)
-                            
+                            // Use fixed colors based on text - black for now
+                            // This ensures consistency across all blocks
                             val paint = Paint().apply {
-                                color = textColor
+                                color = Color.BLACK
                                 style = Paint.Style.FILL
                             }
-                            canvas.drawRect(expandedBox, paint)
+                            canvas.drawRect(boundingBox, paint)
                         }
                         
                         CensorMode.HIDE -> {
                             // Sample background color from above the text
-                            val bgColor = sampleBackgroundColor(original, word.boundingBox)
+                            val bgColor = sampleBackgroundColor(original, boundingBox)
                             
                             val paint = Paint().apply {
                                 color = bgColor
                                 style = Paint.Style.FILL
                             }
-                            canvas.drawRect(expandedBox, paint)
-                        }
-                        
-                        CensorMode.BLUR -> {
-                            // White overlay with semi-transparency
-                            val paint = Paint().apply {
-                                color = Color.WHITE
-                                style = Paint.Style.FILL
-                                alpha = 180
-                            }
-                            canvas.drawRect(expandedBox, paint)
+                            canvas.drawRect(boundingBox, paint)
                         }
                     }
                 }
@@ -90,33 +73,23 @@ object ImageUtils {
     
     // Sample background color from near the bounding box
     private fun sampleBackgroundColor(bitmap: Bitmap, box: Rect): Int {
-        // Sample from just above the text
-        val x = box.left + box.width() / 2
-        val y = (box.top - 5).coerceAtLeast(0)
-        
-        return bitmap.getPixel(x, y)
-    }
-    
-    // Get dominant text color by sampling multiple points in the text region
-    private fun getDominantTextColor(bitmap: Bitmap, box: Rect): Int {
-        // Define sampling points inside the text area
+        // Sample from multiple points around the text
         val samplePoints = listOf(
-            Pair(0.5f, 0.5f),  // Center
-            Pair(0.25f, 0.5f), // Left-center
-            Pair(0.75f, 0.5f), // Right-center
-            Pair(0.5f, 0.25f), // Top-center
-            Pair(0.5f, 0.75f)  // Bottom-center
+            Pair(box.left + box.width() / 2, (box.top - 5).coerceAtLeast(0)), // Above
+            Pair(box.left - 5, box.top + box.height() / 2), // Left
+            Pair(box.right + 5, box.top + box.height() / 2), // Right
+            Pair(box.left + box.width() / 2, box.bottom + 5) // Below
         )
         
-        // Sample colors from each point
-        val colors = samplePoints.map { (xFrac, yFrac) ->
-            val x = (box.left + box.width() * xFrac).toInt().coerceIn(0, bitmap.width - 1)
-            val y = (box.top + box.height() * yFrac).toInt().coerceIn(0, bitmap.height - 1)
-            bitmap.getPixel(x, y)
+        // Sample colors and get the most common one
+        val colors = samplePoints.map { (x, y) ->
+            val safeX = x.coerceIn(0, bitmap.width - 1)
+            val safeY = y.coerceIn(0, bitmap.height - 1)
+            bitmap.getPixel(safeX, safeY)
         }
         
-        // Use the most frequent color (should be the text color)
-        return colors.groupBy { it }.maxByOrNull { it.value.size }?.key ?: Color.BLACK
+        // Return most frequent background color
+        return colors.groupBy { it }.maxByOrNull { it.value.size }?.key ?: Color.WHITE
     }
     
     // Save bitmap to gallery

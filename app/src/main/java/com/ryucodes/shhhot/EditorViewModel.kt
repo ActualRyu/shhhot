@@ -18,8 +18,7 @@ import kotlinx.coroutines.launch
 // Type to represent censoring mode
 enum class CensorMode {
     BLOCK, // Blocks text with solid color
-    HIDE,  // Hides text by matching background color
-    BLUR   // Blurs the text
+    HIDE   // Hides text by matching background color
 }
 
 // Represents a detected word and its bounding box
