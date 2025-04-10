@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Shhhot</string>
+    <string name="button_text">Make It Shhhot</string>
+    <string name="about_title">About Shhhot</string>
+    <string name="about_description">Shhhot is a lightweight app that makes things go Shhhot! Developed with simplicity and efficiency in mind.</string>
+    <string name="version">Version 1.0</string>
+    <string name="license">License: GPL-3.0</string>
+    <string name="license_url">https://github.com/ryucodes/shhhot/blob/main/LICENSE</string>
+    <string name="source_code">Source Code</string>
+    <string name="source_code_url">https://github.com/ryucodes/shhhot</string>
+</resources>
