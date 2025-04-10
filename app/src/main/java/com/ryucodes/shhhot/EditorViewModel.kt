@@ -137,7 +137,15 @@ class EditorViewModel : ViewModel() {
     
     // Change the current censoring mode
     fun setCensorMode(mode: CensorMode) {
-        currentCensorMode = mode
+        // Update the censoring mode and make sure it's applied
+        if (currentCensorMode != mode) {
+            currentCensorMode = mode
+            // Force a small state update to ensure recomposition
+            val updatedLines = detectedTextLines.toMutableList()
+            if (updatedLines.isNotEmpty()) {
+                detectedTextLines = updatedLines
+            }
+        }
     }
     
     // Mark export as successful

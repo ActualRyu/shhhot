@@ -48,6 +48,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -109,11 +110,12 @@ fun EditorScreen(
                     IconButton(
                         onClick = {
                             viewModel.processedBitmap?.let { bitmap ->
-                                // Create censored bitmap and save it
+                                // Create censored bitmap with the current mode
+                                val selectedMode = viewModel.currentCensorMode
                                 val censoredBitmap = ImageUtils.createCensoredBitmap(
                                     bitmap,
                                     viewModel.detectedTextLines,
-                                    viewModel.currentCensorMode
+                                    selectedMode // Use the selected mode directly
                                 )
                                 
                                 // Launch coroutine to save bitmap
@@ -159,33 +161,41 @@ fun EditorScreen(
                 } else {
                     // Show image with text detections
                     viewModel.processedBitmap?.let { bitmap ->
-                        // Image with transformation capabilities
+                        // We'll use a container Box for the entire image area
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .graphicsLayer {
-                                    scaleX = scale
-                                    scaleY = scale
-                                    translationX = offset.x
-                                    translationY = offset.y
-                                }
-                                .transformable(state = transformableState)
+                                .fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            // Display the image
-                            AsyncImage(
-                                model = bitmap,
-                                contentDescription = "Selected Image",
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            
-                            // Overlay for detected text
-                            DetectedTextOverlay(
-                                detectedLines = viewModel.detectedTextLines,
-                                onWordClick = { lineIndex, wordIndex ->
-                                    viewModel.toggleWordCensoring(lineIndex, wordIndex)
-                                }
-                            )
+                            // Image with transformation capabilities
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                        translationX = offset.x
+                                        translationY = offset.y
+                                    }
+                                    .transformable(state = transformableState)
+                            ) {
+                                // Display the image
+                                AsyncImage(
+                                    model = bitmap,
+                                    contentDescription = "Selected Image",
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                
+                                // Overlay for detected text - properly positioned within the same
+                                // transformable container to ensure it scales and moves with the image
+                                DetectedTextOverlay(
+                                    detectedLines = viewModel.detectedTextLines,
+                                    onWordClick = { lineIndex, wordIndex ->
+                                        viewModel.toggleWordCensoring(lineIndex, wordIndex)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -209,20 +219,21 @@ fun DetectedTextOverlay(
     detectedLines.forEachIndexed { lineIndex, line ->
         // For each word in the line
         line.words.forEachIndexed { wordIndex, word ->
-            // Calculate position relative to the image size
-            val left = word.boundingBox.left.toFloat()
-            val top = word.boundingBox.top.toFloat()
-            val width = word.boundingBox.width().toFloat()
-            val height = word.boundingBox.height().toFloat()
+            // Get bounding box in pixels
+            val boundingBox = word.boundingBox
             
-            // Create a clickable overlay for this word
+            // Create a clickable overlay sized to match the word
+            // Using absolute positioning with graphicsLayer
             Box(
                 modifier = Modifier
                     .graphicsLayer {
-                        translationX = left
-                        translationY = top
+                        translationX = boundingBox.left.toFloat()
+                        translationY = boundingBox.top.toFloat()
                     }
-                    .size(width = width.dp, height = height.dp)
+                    .size(
+                        width = boundingBox.width().toFloat().dp,
+                        height = boundingBox.height().toFloat().dp
+                    )
                     .border(
                         width = 1.dp,
                         color = if (word.isCensored) 

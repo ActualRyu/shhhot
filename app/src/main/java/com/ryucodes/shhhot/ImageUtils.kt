@@ -40,35 +40,45 @@ object ImageUtils {
             for (word in line.words) {
                 // Only censor if marked as censored
                 if (word.isCensored) {
+                    // Expand the bounding box slightly for better coverage
+                    val expandedBox = Rect(
+                        word.boundingBox.left - 2,
+                        word.boundingBox.top - 2,
+                        word.boundingBox.right + 2,
+                        word.boundingBox.bottom + 2
+                    )
+                    
                     when (censorMode) {
                         CensorMode.BLOCK -> {
-                            // Draw a black rectangle over the word
+                            // Get most common text color by sampling multiple points
+                            val textColor = getDominantTextColor(original, word.boundingBox)
+                            
                             val paint = Paint().apply {
-                                color = Color.BLACK
+                                color = textColor
                                 style = Paint.Style.FILL
                             }
-                            canvas.drawRect(word.boundingBox, paint)
+                            canvas.drawRect(expandedBox, paint)
                         }
                         
                         CensorMode.HIDE -> {
-                            // Sample background color from near the word
+                            // Sample background color from above the text
                             val bgColor = sampleBackgroundColor(original, word.boundingBox)
+                            
                             val paint = Paint().apply {
                                 color = bgColor
                                 style = Paint.Style.FILL
                             }
-                            canvas.drawRect(word.boundingBox, paint)
+                            canvas.drawRect(expandedBox, paint)
                         }
                         
                         CensorMode.BLUR -> {
-                            // For blur, we'd use a more complex approach in a real app
-                            // This is a simplified version using a solid color with some transparency
+                            // White overlay with semi-transparency
                             val paint = Paint().apply {
                                 color = Color.WHITE
                                 style = Paint.Style.FILL
-                                alpha = 180 // Semi-transparent
+                                alpha = 180
                             }
-                            canvas.drawRect(word.boundingBox, paint)
+                            canvas.drawRect(expandedBox, paint)
                         }
                     }
                 }
@@ -85,6 +95,28 @@ object ImageUtils {
         val y = (box.top - 5).coerceAtLeast(0)
         
         return bitmap.getPixel(x, y)
+    }
+    
+    // Get dominant text color by sampling multiple points in the text region
+    private fun getDominantTextColor(bitmap: Bitmap, box: Rect): Int {
+        // Define sampling points inside the text area
+        val samplePoints = listOf(
+            Pair(0.5f, 0.5f),  // Center
+            Pair(0.25f, 0.5f), // Left-center
+            Pair(0.75f, 0.5f), // Right-center
+            Pair(0.5f, 0.25f), // Top-center
+            Pair(0.5f, 0.75f)  // Bottom-center
+        )
+        
+        // Sample colors from each point
+        val colors = samplePoints.map { (xFrac, yFrac) ->
+            val x = (box.left + box.width() * xFrac).toInt().coerceIn(0, bitmap.width - 1)
+            val y = (box.top + box.height() * yFrac).toInt().coerceIn(0, bitmap.height - 1)
+            bitmap.getPixel(x, y)
+        }
+        
+        // Use the most frequent color (should be the text color)
+        return colors.groupBy { it }.maxByOrNull { it.value.size }?.key ?: Color.BLACK
     }
     
     // Save bitmap to gallery
