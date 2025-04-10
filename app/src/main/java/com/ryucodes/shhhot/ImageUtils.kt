@@ -38,11 +38,17 @@ object ImageUtils {
         for (line in detectedLines) {
             // Process each word in the line
             for (word in line.words) {
-                // Only censor if marked as censored
-                if (word.isCensored) {
-                    val boundingBox = word.boundingBox
-                    
-                    when (censorMode) {
+                    // Only censor if marked as censored
+                    if (word.isCensored) {
+                        // Expand bounding box by 3 pixels on all sides to prevent text seeping through
+                        val expandedBox = Rect(
+                            word.boundingBox.left - 3,
+                            word.boundingBox.top - 3,
+                            word.boundingBox.right + 3,
+                            word.boundingBox.bottom + 3
+                        )
+                        
+                        when (censorMode) {
                         CensorMode.BLOCK -> {
                             // Use fixed colors based on text - black for now
                             // This ensures consistency across all blocks
@@ -50,18 +56,18 @@ object ImageUtils {
                                 color = Color.BLACK
                                 style = Paint.Style.FILL
                             }
-                            canvas.drawRect(boundingBox, paint)
+                            canvas.drawRect(expandedBox, paint)
                         }
                         
                         CensorMode.HIDE -> {
                             // Sample background color from above the text
-                            val bgColor = sampleBackgroundColor(original, boundingBox)
+                            val bgColor = sampleBackgroundColor(original, word.boundingBox)
                             
                             val paint = Paint().apply {
                                 color = bgColor
                                 style = Paint.Style.FILL
                             }
-                            canvas.drawRect(boundingBox, paint)
+                            canvas.drawRect(expandedBox, paint)
                         }
                     }
                 }

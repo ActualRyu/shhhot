@@ -2,6 +2,9 @@ package com.ryucodes.shhhot
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -46,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -354,6 +358,34 @@ fun ExportSuccessScreen(onNavigateBack: () -> Unit) {
         onNavigateBack()
     }
     
+    // Animation state for the checkmark icon
+    var iconVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        // Delay slightly to create a more pleasing animation sequence
+        delay(100)
+        iconVisible = true
+    }
+    
+    // Animation for the icon size
+    val iconScale by animateFloatAsState(
+        targetValue = if (iconVisible) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "icon scale animation"
+    )
+    
+    // Animation for the text opacity
+    val textAlpha by animateFloatAsState(
+        targetValue = if (iconVisible) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "text alpha animation"
+    )
+    
     Scaffold(
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
         topBar = {
@@ -382,12 +414,13 @@ fun ExportSuccessScreen(onNavigateBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Success icon
+            // Success icon with animation
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                    .scale(iconScale),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -400,11 +433,22 @@ fun ExportSuccessScreen(onNavigateBack: () -> Unit) {
             
             Spacer(modifier = Modifier.height(24.dp))
             
+            // Text with fade-in animation
             Text(
                 text = "Export Successful",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.graphicsLayer { alpha = textAlpha }
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Your image has been saved to gallery",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                modifier = Modifier.graphicsLayer { alpha = textAlpha }
             )
         }
     }
