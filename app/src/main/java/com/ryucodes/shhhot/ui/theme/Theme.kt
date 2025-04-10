@@ -9,35 +9,71 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+// Apple-inspired color schemes
+private val AppleLightColorScheme = lightColorScheme(
+    primary = AppleBlue,
+    onPrimary = AppleLightGray,
+    primaryContainer = AppleLightGray,
+    onPrimaryContainer = AppleBlue,
+    
+    secondary = AppleMediumGray,
+    onSecondary = AppleLightGray,
+    secondaryContainer = AppleGray,
+    onSecondaryContainer = AppleMediumGray,
+    
+    tertiary = AppleBlue,
+    onTertiary = AppleLightGray,
+    
+    background = AppleLightGray,
+    onBackground = AppleDarkGray,
+    
+    surface = AppleLightGray,
+    onSurface = AppleDarkGray,
+    surfaceVariant = AppleGray,
+    onSurfaceVariant = AppleMediumGray,
+    
+    error = Color(0xFFD30000),
+    onError = AppleLightGray
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val AppleDarkColorScheme = darkColorScheme(
+    primary = AppleBlueDark,
+    onPrimary = AppleTextDark,
+    primaryContainer = AppleSurfaceDark,
+    onPrimaryContainer = AppleBlueDark,
+    
+    secondary = AppleGrayMediumDark,
+    onSecondary = AppleTextDark,
+    secondaryContainer = AppleSurfaceDark,
+    onSecondaryContainer = AppleGrayMediumDark,
+    
+    tertiary = AppleBlueDark,
+    onTertiary = AppleTextDark,
+    
+    background = AppleGrayDark,
+    onBackground = AppleTextDark,
+    
+    surface = AppleGrayDark,
+    onSurface = AppleTextDark,
+    surfaceVariant = AppleSurfaceDark,
+    onSurfaceVariant = AppleGrayMediumDark,
+    
+    error = Color(0xFFFF453A),
+    onError = AppleTextDark
 )
 
 @Composable
 fun ShhhotTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Disabled by default to use our custom Apple-like colors
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -46,8 +82,18 @@ fun ShhhotTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> AppleDarkColorScheme
+        else -> AppleLightColorScheme
+    }
+    
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = colorScheme.background.toArgb()
+            // Make status bar icons dark in light mode, light in dark mode
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+        }
     }
 
     MaterialTheme(
